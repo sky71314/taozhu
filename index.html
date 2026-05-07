@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>陶猪数字大赏 </title>
+    <title>陶猪数字大赏 - 高定工坊版</title>
     <style>
         body { margin: 0; background-color: #050505; overflow: hidden; user-select: none; touch-action: none; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", sans-serif; }
         :root { --gold: #E5C158; --glass: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.1); }
+        
 
         #uiLayer { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; display: none; pointer-events: none; }
         .hud-container { display: flex; justify-content: space-between; padding: 20px 30px; transition: all 0.3s; }
@@ -22,7 +23,7 @@
         .era-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px; }
         #eraBoard { font-size: 20px; color: var(--gold); letter-spacing: 4px; font-weight: 300; }
 
-        #legendBoard { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--glass); padding: 10px 20px; border-radius: 30px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #aaa; pointer-events: auto; font-size: 11px; font-weight: 300; letter-spacing: 1px; display: none; gap: 15px; } /* 默认先隐藏，游戏开始才显示 */
+        #legendBoard { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--glass); padding: 10px 20px; border-radius: 30px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: #aaa; pointer-events: auto; font-size: 11px; font-weight: 300; letter-spacing: 1px; display: none; gap: 15px; } 
         .legend-item { display: flex; align-items: center; }
 
         #levelUpText { position: absolute; top: 30%; width: 100%; text-align: center; font-size: 50px; color: #fff; font-weight: 100; letter-spacing: 20px; text-shadow: 0 0 30px var(--gold); opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 15; }
@@ -209,8 +210,10 @@
         document.body.appendChild(renderer.domElement);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
+        // 【修改：将镜头拉近了，高度从 8 降到 5，远近距离从 15 拉近到 9】
         function adjustCameraForMobile() { 
-            camera.position.set(0, 8, 15); camera.lookAt(0, -2, 0); 
+            camera.position.set(0, 5, 9); 
+            camera.lookAt(0, -2, 0); 
         }
         adjustCameraForMobile();
 
@@ -256,7 +259,7 @@
 
         let pigModels = [null, null, null, null]; let activePig = null; let itemModels = { apple: null, gold: null, heart: null, bomb: null }; let pigScales = [2.5, 2.5, 2.5, 2.5]; 
         
-        // 【修复】去掉了发光材质外壳，保留您原生烘焙的材质
+        // 去掉了发光材质外壳，保留原生烘焙材质
         function setupModel(m) { 
             m.traverse(c => { 
                 if (c.isMesh) { 
@@ -279,24 +282,22 @@
             if (!itemModels[type]) return; let mesh = itemModels[type].clone();
             mesh.traverse(c => { if(c.isMesh) { c.material = c.material.clone(); if(type==='gold') { c.material.emissive=new THREE.Color(0xE5C158); c.material.emissiveIntensity=0.3; } if(type==='heart') { c.material.emissive=new THREE.Color(0x00E5FF); c.material.emissiveIntensity=0.3; } } });
             
-            // 1. 【在这里单独调整每一个道具的大小】
+            // 1. 单独调整道具大小
             let s = 1;
-            if (type === 'apple') s = 0.04;        // 🍎 苹果
-            else if (type === 'gold') s = 0.1;    // 🍑 仙桃
-            else if (type === 'heart') s = 0.5;   // 💊 药丸
-            else if (type === 'bomb') s = 0.5;    // 💣 炸弹
+            if (type === 'apple') s = 0.04;        
+            else if (type === 'gold') s = 0.1;    
+            else if (type === 'heart') s = 0.5;   
+            else if (type === 'bomb') s = 0.5;    
             mesh.scale.set(s, s, s); 
             
-            // 2. 【掉落范围匹配您调好的区域】
+            // 2. 掉落范围
             mesh.position.set((Math.random()-0.5)*15, 15, (Math.random()-0.5)*15); 
             scene.add(mesh);
             
-            // 3. 【修复光圈：放大尺寸，并紧紧贴在 -3.4 的地板上】
+            // 3. 修复光圈
             let ringColor = (type === 'bomb') ? 0xaaaaaa : color; 
-            // 把光圈尺寸从 0.3 放到了 1.5
             let ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.8, 32), new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.5, side: THREE.DoubleSide })); 
             ring.rotation.x = -Math.PI / 2; 
-            // 关键：高度设为 -3.39（在您 -3.4 的展台上面一点点，防止闪烁穿模）
             ring.position.y = -3.39; 
             scene.add(ring);
             
@@ -337,7 +338,6 @@
             if(audioCtx.state === 'suspended') audioCtx.resume(); playBGM();
             document.getElementById('startScreen').style.display = 'none'; document.getElementById('gameOverScreen').style.display = 'none'; document.getElementById('galleryScreen').style.display = 'block';
             document.getElementById('boostArea').style.display = 'none'; document.getElementById('joystickZone').style.display = 'none';
-            // 【修复】进展厅时隐藏图例
             document.getElementById('legendBoard').style.display = 'none'; 
             
             gameState = 'gallery'; controls.enabled = true; camera.position.set(0, 2, 9); controls.target.set(0, -1, 0);
@@ -401,7 +401,6 @@
         function triggerGameOver() {
             gameState = 'gameover'; 
             document.getElementById('boostArea').style.display = 'none'; document.getElementById('joystickZone').style.display = 'none';
-            // 【修复】游戏结束时隐藏图例
             document.getElementById('legendBoard').style.display = 'none'; 
             
             document.getElementById('finalScore').innerText = '探索得分：' + score; 
@@ -421,13 +420,17 @@
             if(pigModels[0]) { activePig=pigModels[0]; activePig.position.set(0,-2,0); activePig.rotation.set(0,0,0); activePig.scale.set(pigScales[0], pigScales[0], pigScales[0]); scene.add(activePig); }
             gameState = 'playing';
             
-            // 启用虚拟摇杆界面
-            document.getElementById('boostArea').style.display = 'flex'; 
-            document.getElementById('joystickZone').style.display = 'block';
-            // 【修复】只有在游戏进行时显示图例
             document.getElementById('legendBoard').style.display = 'flex'; 
             
-            initControls(); 
+            // 【修改：智能设备检测，仅在移动端屏幕或支持触摸时显示手机控件】
+            if (window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                document.getElementById('boostArea').style.display = 'flex'; 
+                document.getElementById('joystickZone').style.display = 'block';
+                initControls(); 
+            } else {
+                document.getElementById('boostArea').style.display = 'none'; 
+                document.getElementById('joystickZone').style.display = 'none';
+            }
         }
 
         function generatePoster() {
@@ -525,7 +528,7 @@
                     activePig.rotation.y += diff * 0.15;
                 }
 
-                // 边界限制（把活动范围放宽到 15）
+                // 边界限制
                 activePig.position.x = Math.max(-15, Math.min(15, activePig.position.x));
                 activePig.position.z = Math.max(-15, Math.min(15, activePig.position.z));
 
@@ -539,7 +542,6 @@
                         scene.remove(it.mesh); scene.remove(it.ring); activeItems.splice(i,1);
                         if(score>=10 && currentLevel===1) evolvePig(1, "数字金缮修复版"); if(score>=25 && currentLevel===2) evolvePig(2, "盛世重光华丽版"); if(score>=45 && currentLevel===3) evolvePig(3, "赛博纪元高科版");
                         if(lives<=0) { triggerGameOver(); }
-                    // 【修复】掉落高度判定降低到 -3.5
                     } else if(it.mesh.position.y < -3.5) {
                         if(it.type==='apple' || it.type==='gold') { lives--; let h=''; for(let k=0; k<lives; k++) h+='❤️'; document.getElementById('livesBoard').innerText=h; }
                         scene.remove(it.mesh); scene.remove(it.ring); activeItems.splice(i,1);
