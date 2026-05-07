@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>陶猪数字艺术馆 - 终极压缩适配版</title>
+    <style>
+        body { margin: 0; background-color: #03060a; overflow: hidden; user-select: none; touch-action: none; font-family: "Microsoft YaHei", sans-serif; }
+        :root { --primary: #00E5FF; --gold: #D4AF37; --danger: #FF3366; --bg-panel: rgba(8, 12, 18, 0.85); }
+        #uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; pointer-events: none; }
+        .hud-container { display: flex; justify-content: space-between; padding: 25px 40px; transition: all 0.3s; }
+        .hud-left { display: flex; flex-direction: column; gap: 15px; }
+        .hud-box { background: var(--bg-panel); border-left: 4px solid var(--primary); padding: 15px 30px; color: white; font-weight: bold; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); pointer-events: auto; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%); border-bottom: 1px solid rgba(0, 229, 255, 0.3); }
+        #scoreBoard { font-size: 26px; color: var(--gold); border-left-color: var(--gold); }
+        #livesBoard { font-size: 22px; color: var(--danger); border-left-color: var(--danger); }
+        .era-box { border-left: none; border-right: 4px solid var(--gold); clip-path: polygon(0 0, 100% 0, 100% 100%, 15px 100%, 0 calc(100% - 15px)); text-align: right; border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
+        #eraBoard { font-size: 32px; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); letter-spacing: 2px; }
+        #legendBoard { position: absolute; bottom: 30px; left: 40px; background: var(--bg-panel); padding: 20px 25px; font-size: 15px; color: #ddd; pointer-events: auto; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%); border-top: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .legend-item { display: flex; align-items: center; margin-bottom: 10px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; margin-right: 12px; transform: rotate(45deg); }
+        #levelUpText { position: absolute; top: 35%; width: 100%; text-align: center; font-size: 90px; color: #fff; text-shadow: 0 0 50px var(--gold); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 15; letter-spacing: 12px; font-weight: 900; font-style: italic; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(10,15,22,0.85) 0%, rgba(2,4,8,0.98) 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; color: white; backdrop-filter: blur(10px); }
+        .screen h1 { font-size: 70px; margin-bottom: 5px; letter-spacing: 12px; color: var(--gold); text-shadow: 0 0 40px rgba(212, 175, 55, 0.4); font-weight: 900; text-align: center;}
+        .screen p.subtitle { font-size: 20px; color: var(--primary); margin-bottom: 40px; letter-spacing: 4px; text-transform: uppercase; text-align: center;}
+        .leaderboard-panel { background: rgba(5, 10, 15, 0.6); border: 1px solid rgba(255, 215, 0, 0.2); padding: 20px 40px; border-radius: 8px; margin-bottom: 40px; width: 350px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); position: relative; }
+        .leaderboard-panel::before { content: 'TOP RECORDS'; position: absolute; top: -12px; left: 20px; background: #030508; padding: 0 10px; font-size: 14px; color: var(--gold); letter-spacing: 2px; }
+        .lb-item { display: flex; justify-content: space-between; font-size: 18px; margin: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .lb-item:nth-child(1) .lb-rank { color: var(--gold); font-weight: bold; font-size: 22px; }
+        .lb-item:nth-child(2) .lb-rank { color: #C0C0C0; font-weight: bold; }
+        .lb-item:nth-child(3) .lb-rank { color: #CD7F32; font-weight: bold; }
+        .btn-group { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; }
+        .btn { position: relative; padding: 18px 45px; font-size: 20px; font-weight: bold; color: #fff; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.4); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); letter-spacing: 3px; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); text-transform: uppercase; }
+        .btn::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 3px; background: var(--primary); transition: 0.3s; }
+        .btn:hover::after { width: 100%; }
+        .btn:hover { background: rgba(0, 229, 255, 0.15); box-shadow: 0 0 30px rgba(0, 229, 255, 0.4); transform: translateY(-3px); }
+        .btn:active { transform: translateY(1px); }
+        .btn-gallery { border-color: rgba(212, 175, 55, 0.5); color: var(--gold); }
+        .btn-gallery::after { background: var(--gold); }
+        .btn-gallery:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); }
+        .btn-share { border-color: var(--danger); color: var(--danger); }
+        .btn-share::after { background: var(--danger); }
+        .btn-share:hover { background: rgba(255, 51, 102, 0.15); box-shadow: 0 0 30px rgba(255, 51, 102, 0.4); }
+        #gameOverScreen { display: none; }
+        #finalRankTitle { font-size: 40px; color: var(--primary); margin: 10px 0 20px 0; letter-spacing: 8px; text-shadow: 0 0 20px rgba(0,229,255,0.5); text-align: center;}
+        #toast { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 15px 30px; font-weight: bold; font-size: 18px; border-radius: 4px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 100; box-shadow: 0 5px 20px rgba(212,175,55,0.5); }
+        #galleryScreen { display: none; background: transparent; backdrop-filter: none; z-index: 30; pointer-events: none; }
+        #galleryInfo, .close-gallery, .arrow-btn { pointer-events: auto; }
+        #galleryInfo { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); text-align: center; color: white; width: 85%; max-width: 900px; background: var(--bg-panel); padding: 25px 40px; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); border-bottom: 2px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        #galleryInfo h2 { font-size: 30px; margin: 0 0 10px 0; color: var(--gold); letter-spacing: 4px; }
+        #galleryInfo p { font-size: 16px; color: #ccc; line-height: 1.6; margin: 0; }
+        #galleryControls { position: absolute; top: 45%; width: 100%; display: flex; justify-content: space-between; padding: 0 50px; box-sizing: border-box; transform: translateY(-50%); }
+        .arrow-btn { font-size: 35px; color: rgba(255,215,0,0.8); background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.3); width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .arrow-btn:hover { background: rgba(255,215,0,0.2); color: #FFD700; border-color: #FFD700; box-shadow: 0 0 20px rgba(255,215,0,0.4); transform: scale(1.1); }
+        .close-gallery { position: absolute; top: 30px; right: 40px; font-size: 16px; padding: 12px 25px; border-color: rgba(255,255,255,0.3); color: #fff; }
+        #mobileDpad { position: absolute; bottom: 40px; right: 30px; display: none; flex-direction: column; align-items: center; pointer-events: auto; z-index: 50; }
+        .dpad-row { display: flex; gap: 15px; margin-top: 15px; }
+        .dpad-btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(0, 229, 255, 0.1); border: 2px solid rgba(0, 229, 255, 0.4); color: var(--primary); font-size: 28px; display: flex; justify-content: center; align-items: center; user-select: none; backdrop-filter: blur(4px); box-shadow: 0 0 15px rgba(0,0,0,0.5); transition: background 0.1s;}
+        .dpad-btn:active, .dpad-btn.active { background: rgba(0, 229, 255, 0.4); box-shadow: 0 0 20px var(--primary); }
+
+        @media (max-width: 768px) {
+            .screen h1 { font-size: 40px; letter-spacing: 5px; }
+            .screen p.subtitle { font-size: 14px; }
+            .leaderboard-panel { width: 80%; padding: 15px; margin-bottom: 20px; }
+            .btn { padding: 12px 25px; font-size: 16px; width: 80%; text-align: center; clip-path: none; border-radius: 8px;}
+            .btn-group { flex-direction: column; gap: 15px; width: 100%; align-items: center;}
+            .hud-container { padding: 15px 10px; flex-direction: row; align-items: flex-start;}
+            .hud-left { gap: 10px; }
+            .hud-box { padding: 8px 15px; font-size: 14px; clip-path: none; border-radius: 6px;}
+            #scoreBoard { font-size: 20px; }
+            #livesBoard { font-size: 18px; }
+            #eraBoard { font-size: 20px; }
+            #legendBoard { display: none !important; }
+            #levelUpText { font-size: 45px; letter-spacing: 5px; }
+            #galleryInfo { padding: 15px; width: 90%; bottom: 20px; clip-path: none; border-radius: 8px; }
+            #galleryInfo h2 { font-size: 24px; }
+            #galleryInfo p { font-size: 14px; }
+            .close-gallery { top: 15px; right: 15px; font-size: 14px; padding: 8px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast">✅ 战报已复制，快去粘贴给朋友吧！</div>
+
+    <div id="uiLayer">
+        <div class="hud-container">
+            <div class="hud-left">
+                <div id="scoreBoard" class="hud-box">SCORE: 0</div>
+                <div id="livesBoard" class="hud-box">HP: ❤️❤️❤️</div>
+            </div>
+            <div class="hud-right">
+                <div class="hud-box era-box">
+                    <span style="font-size: 12px; color: var(--gold); display: block; margin-bottom: 3px; opacity: 0.7; letter-spacing: 1px;">SYS.PHASE</span>
+                    <span id="eraBoard">远古泥胚</span>
+                </div>
+            </div>
+        </div>
+        <div id="legendBoard">
+            <div style="font-weight:900; margin-bottom: 12px; color:var(--primary); letter-spacing: 2px;">[ 物质探测图谱 ]</div>
+            <div class="legend-item"><span class="legend-color" style="background:var(--danger); box-shadow: 0 0 8px var(--danger);"></span>普通果实 (+1 分)</div>
+            <div class="legend-item"><span class="legend-color" style="background:var(--gold); box-shadow: 0 0 8px var(--gold);"></span>稀有仙桃 (+3 分)</div>
+            <div class="legend-item"><span class="legend-color" style="background:var(--primary); box-shadow: 0 0 8px var(--primary);"></span>修复粒子 (+1 命)</div>
+            <div class="legend-item"><span class="legend-color" style="background:#555; border: 1px solid #aaa;"></span>暗物质炸弹 (扣血)</div>
+        </div>
+        <div id="mobileDpad">
+            <div class="dpad-btn" id="btnUp">▲</div>
+            <div class="dpad-row">
+                <div class="dpad-btn" id="btnLeft">◀</div>
+                <div class="dpad-btn" id="btnDown">▼</div>
+                <div class="dpad-btn" id="btnRight">▶</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="levelUpText">形态大进化</div>
+
+    <div id="startScreen" class="screen">
+        <h1>陶猪数字大赏</h1>
+        <p class="subtitle">西辽河流域文明 · 跨时空进化模拟</p>
+        <div class="leaderboard-panel" id="startLeaderboard"><div style="text-align:center; color:#888; font-style:italic;">暂无记录</div></div>
+        <div class="btn-group">
+            <button class="btn" onclick="startGame()">启动模拟器</button>
+            <button class="btn btn-gallery" onclick="openGallery()">文物数字图鉴</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="screen">
+        <h1 style="color: #fff; text-shadow: 0 0 30px rgba(255,255,255,0.3);">探索终止</h1>
+        <p id="finalScore" style="font-size: 24px; color: #ccc; margin-bottom: 5px; letter-spacing: 2px;">本次文化探索得分：0</p>
+        <div id="finalRankTitle">文物发现者</div> 
+        <div class="leaderboard-panel" id="endLeaderboard"></div>
+        <div class="btn-group">
+            <button class="btn" onclick="resetGame()">重新部署</button>
+            <button class="btn btn-share" onclick="shareAchievement()">分享我的战报</button>
+            <button class="btn btn-gallery" onclick="openGallery()">进入图鉴</button>
+        </div>
+    </div>
+
+    <div id="galleryScreen" class="screen">
+        <div class="tip-text">/// 360° 全息检视模式 ///</div>
+        <button class="btn close-gallery" onclick="closeGallery()">✖ 退出展厅</button>
+        <div id="galleryControls">
+            <button class="arrow-btn" onclick="changeGallery(-1)">&#10094;</button>
+            <button class="arrow-btn" onclick="changeGallery(1)">&#10095;</button>
+        </div>
+        <div id="galleryInfo">
+            <h2 id="galleryTitle">远古泥胚</h2>
+            <p id="galleryDesc">载入中...</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+
+    <script>
+        // 排行榜与成就
+        let finalRankName = "";
+        function updateLeaderboardUI() {
+            let scores = JSON.parse(localStorage.getItem('taoZhuScores')) || [];
+            let html = scores.length === 0 ? '<div style="text-align:center; color:#888; font-style:italic;">暂无记录</div>' : '';
+            scores.forEach((s, index) => {
+                let rankIcon = (index === 0) ? '🥇' : (index === 1) ? '🥈' : (index === 2) ? '🥉' : `${index+1}.`;
+                html += `<div class="lb-item"><span class="lb-rank">${rankIcon}</span><span style="color:#fff;">${s} 分</span></div>`;
+            });
+            document.getElementById('startLeaderboard').innerHTML = html; document.getElementById('endLeaderboard').innerHTML = html;
+        }
+        function saveScoreToLocal(newScore) { let scores = JSON.parse(localStorage.getItem('taoZhuScores')) || []; scores.push(newScore); scores.sort((a, b) => b - a); scores = scores.slice(0, 5); localStorage.setItem('taoZhuScores', JSON.stringify(scores)); updateLeaderboardUI(); }
+        function calculateRank(s) { if (s < 10) return "初级勘探员"; if (s < 25) return "金缮修复师"; if (s < 45) return "盛世见证者"; return "赛博纪元领航员"; }
+        function shareAchievement() {
+            let eraName = document.getElementById('eraBoard').innerText;
+            let shareText = `🏆 我在《陶猪数字大赏》中斩获了 ${score} 分！\n✨ 荣获【${finalRankName}】称号！\n🚀 成功解锁文物【${eraName}】！\n快来探索西辽河文明的赛博进化吧！`;
+            navigator.clipboard.writeText(shareText).then(() => { let t = document.getElementById('toast'); t.style.opacity=1; setTimeout(()=>t.style.opacity=0, 3000); }).catch(()=>alert("复制失败，您的得分是："+score));
+        }
+        updateLeaderboardUI();
+
+        // 音乐与音效
+        const bgMusic = new Audio('bgm.mp3'); bgMusic.loop = true; bgMusic.volume = 0.4;
+        function playBGM() { bgMusic.play().catch(e => { console.warn("需等待交互播放音乐"); }); }
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume(); const now = audioCtx.currentTime;
+            if (type === 'evolve') { [0, 4, 7, 12].forEach((s, i) => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle'; osc.frequency.value = 220 * Math.pow(2, s/12); gain.gain.setValueAtTime(0.3, now + i*0.1); gain.gain.linearRampToValueAtTime(0, now + 1.2 + i*0.1); osc.start(now + i*0.1); osc.stop(now + 1.2 + i*0.1); }); return; }
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'apple') { osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0.15, now); osc.start(); osc.stop(now+0.1); } else if (type === 'gold') { osc.frequency.setValueAtTime(1200, now); gain.gain.setValueAtTime(0.15, now); osc.start(); osc.stop(now+0.2); } else if (type === 'heart') { osc.type='triangle'; osc.frequency.setValueAtTime(400, now); gain.gain.setValueAtTime(0.15, now); osc.start(); osc.stop(now+0.2); } else if (type === 'bomb') { osc.type='square'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.25, now); osc.start(); osc.stop(now+0.3); }
+        }
+
+        let gameState = 'start'; let score = 0; let lives = 3; let currentLevel = 1;
+
+        // 场景与移动端相机自适应
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000); 
+        function adjustCameraForMobile() { let aspect = window.innerWidth / window.innerHeight; if (aspect < 1) { camera.position.set(0, 9, 17); camera.lookAt(0, -2, 0); } else { camera.position.set(0, 5, 12); camera.lookAt(0, -1, 0); } }
+        adjustCameraForMobile();
+
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x06090e); scene.fog = new THREE.FogExp2(0x06090e, 0.04);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false }); 
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3; 
+        document.body.appendChild(renderer.domElement);
+
+        const pmremGenerator = new THREE.PMREMGenerator(renderer); pmremGenerator.compileEquirectangularShader(); scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.5); mainLight.position.set(5, 10, 7); mainLight.castShadow = true; mainLight.shadow.mapSize.width = 1024; mainLight.shadow.mapSize.height = 1024; scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0xaaccff, 0.8, 20); fillLight.position.set(-5, 3, -5); scene.add(fillLight);
+        const pigLight = new THREE.PointLight(0xffffff, 1.0, 10); scene.add(pigLight);
+
+        const pedestalGeo = new THREE.CylinderGeometry(8, 8.5, 0.5, 64); const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9, metalness: 0.1 }); const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat); pedestal.position.y = -2.25; pedestal.receiveShadow = true; scene.add(pedestal);
+        const ringGeo = new THREE.RingGeometry(8.5, 8.7, 64); const ringMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }); const archRing = new THREE.Mesh(ringGeo, ringMat); archRing.rotation.x = -Math.PI / 2; archRing.position.y = -2.01; scene.add(archRing);
+        const floorGeo = new THREE.PlaneGeometry(100, 100); const floorMat = new THREE.MeshStandardMaterial({ color: 0x030508, roughness: 1.0, metalness: 0.0 }); const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI / 2; floor.position.y = -2.5; floor.receiveShadow = true; scene.add(floor);
+
+        // ==========================================
+        // 【核心修复：配置 DRACOLoader 解压器】
+        // ==========================================
+        const loader = new THREE.GLTFLoader();
+        const dracoLoader = new THREE.DRACOLoader();
+        // 选用官方极其稳定的 Google 静态服务器解码路径，保证国内加载畅通无阻！
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/');
+        loader.setDRACOLoader(dracoLoader);
+
+        let pigModels = [null, null, null, null]; let activePig = null; let itemModels = { apple: null, gold: null, heart: null, bomb: null }; let pigScales = [2.5, 2.5, 2.5, 2.5]; 
+        
+        function setupModel(m) { m.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); }
+        
+        // 加载模型（如果找不到文件会在控制台报错，但不会卡死整个页面）
+        loader.load('pig1.glb', g => { pigModels[0]=g.scene; setupModel(g.scene); activePig=g.scene; activePig.position.y=-2; activePig.scale.set(pigScales[0],pigScales[0],pigScales[0]); scene.add(activePig); }, undefined, e => console.error("加载pig1失败", e));
+        loader.load('pig2.glb', g => { pigModels[1]=g.scene; setupModel(g.scene); }); 
+        loader.load('pig3.glb', g => { pigModels[2]=g.scene; setupModel(g.scene); }); 
+        loader.load('pig4.glb', g => { pigModels[3]=g.scene; setupModel(g.scene); });
+
+        loader.load('apple.glb', g => { itemModels.apple=g.scene; setupModel(g.scene); }); 
+        loader.load('peach.glb', g => { itemModels.gold=g.scene; setupModel(g.scene); }); 
+        loader.load('pill.glb', g => { itemModels.heart=g.scene; setupModel(g.scene); }); 
+        loader.load('bomb.glb', g => { itemModels.bomb=g.scene; setupModel(g.scene); });
+
+        let activeItems = []; let explosionParticles = []; let auraParticles = [];
+        function createExplosion(x, y, z, color) { for(let i=0; i<15; i++) { let p = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), new THREE.MeshBasicMaterial({ color: color })); p.position.set(x, y, z); p.life = 1.0; p.velocity = new THREE.Vector3((Math.random()-0.5)*0.6, Math.random()*0.6, (Math.random()-0.5)*0.6); scene.add(p); explosionParticles.push(p); } }
+
+        function spawnItem(baseSpeed) {
+            let rand = Math.random(); let type = 'apple'; let color = 0xe74c3c;
+            if (rand > 0.7 && rand < 0.85) { type='gold'; color=0xFFD700; } else if (rand > 0.85 && rand < 0.93) { type='heart'; color=0x00E5FF; } else if (rand > 0.93) { type='bomb'; color=0x333333; }
+            if (!itemModels[type]) return; let mesh = itemModels[type].clone();
+            mesh.traverse(c => { if(c.isMesh) { c.material = c.material.clone(); if(type==='gold') { c.material.emissive=new THREE.Color(0xFFD700); c.material.emissiveIntensity=0.4; } if(type==='heart') { c.material.emissive=new THREE.Color(0x00E5FF); c.material.emissiveIntensity=0.3; } } });
+            let s = (type==='apple')?8 : (type==='gold')?0.1 : 0.4; mesh.scale.set(s,s,s); mesh.position.set((Math.random()-0.5)*10, 8, (Math.random()-0.5)*8); scene.add(mesh);
+            let ringColor = (type === 'bomb') ? 0xaaaaaa : color; let ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.6, 32), new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.8, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -1.98; scene.add(ring);
+            activeItems.push({ mesh, ring, type, color, speed: baseSpeed + Math.random() * 0.02 });
+        }
+
+        function evolvePig(idx, name) {
+            if (!pigModels[idx] || currentLevel === idx+1) return; playSound('evolve');
+            let ox = activePig.position.x; let oz = activePig.position.z; scene.remove(activePig);
+            activePig = pigModels[idx]; activePig.position.set(ox, -2, oz); activePig.scale.set(pigScales[idx], pigScales[idx], pigScales[idx]); scene.add(activePig);
+            currentLevel = idx+1; document.getElementById('eraBoard').innerText = name;
+            createExplosion(ox, -1, oz, 0xFFD700); createExplosion(ox, 0, oz, 0x00E5FF);
+            let ui = document.getElementById('levelUpText'); ui.style.opacity = 1; setTimeout(()=> ui.style.opacity=0, 2000);
+        }
+
+        const composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera));
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.6); composer.addPass(bloomPass);
+        const fxaaPass = new THREE.ShaderPass(THREE.FXAAShader); const pixelRatio = renderer.getPixelRatio(); fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio); fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio); composer.addPass(fxaaPass);
+        
+        window.addEventListener('resize', () => { 
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); 
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight); 
+            const pr = renderer.getPixelRatio(); fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pr); fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pr); 
+            adjustCameraForMobile(); 
+            if(gameState === 'playing') { document.getElementById('mobileDpad').style.display = window.innerWidth <= 768 ? 'flex' : 'none'; }
+        });
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enabled = false; controls.autoRotate = true; controls.autoRotateSpeed = 1.5; controls.maxDistance = 15; controls.minDistance = 4;
+
+        const eraData = [
+            { title: "远古泥胚", desc: "红山文化的原始记忆，古朴的泥土线条，勾勒出文明最初的轮廓。" },
+            { title: "数字金缮修复版", desc: "洗尽铅华，利用现代数字金缮工艺重现生机，展现陶器温润的质感。" },
+            { title: "盛世重光华丽版", desc: "披上华丽的传统釉色与龙纹浮雕，象征中华文明在历史长河中的辉煌。" },
+            { title: "赛博纪元高科版", desc: "机械与远古图腾的终极碰撞，跨越时空维度的数字艺术潮玩典藏。"}
+        ];
+        let galleryIdx = 0;
+
+        function openGallery() {
+            if(audioCtx.state === 'suspended') audioCtx.resume(); playBGM();
+            document.getElementById('startScreen').style.display = 'none'; document.getElementById('gameOverScreen').style.display = 'none'; document.getElementById('galleryScreen').style.display = 'block';
+            document.getElementById('mobileDpad').style.display = 'none'; 
+            gameState = 'gallery'; controls.enabled = true; camera.position.set(0, 2, 9); controls.target.set(0, -1, 0);
+            activeItems.forEach(i => { i.mesh.visible = false; i.ring.visible = false; }); galleryIdx = currentLevel - 1; updateGallery();
+        }
+
+        function closeGallery() {
+            document.getElementById('galleryScreen').style.display = 'none'; document.getElementById('startScreen').style.display = 'flex';
+            gameState = 'start'; controls.enabled = false; adjustCameraForMobile();
+            if(activePig) { activePig.position.set(0, -2, 0); activePig.rotation.set(0,0,0); }
+            activeItems.forEach(i => { i.mesh.visible = true; i.ring.visible = true; });
+        }
+
+        function changeGallery(d) { galleryIdx = (galleryIdx + d + 4) % 4; updateGallery(); }
+
+        function updateGallery() {
+            if(activePig) scene.remove(activePig); if(!pigModels[galleryIdx]) return;
+            activePig = pigModels[galleryIdx]; activePig.position.set(0, -2, 0); activePig.rotation.set(0,0,0); activePig.scale.set(pigScales[galleryIdx], pigScales[galleryIdx], pigScales[galleryIdx]); scene.add(activePig);
+            document.getElementById('galleryTitle').innerText = eraData[galleryIdx].title; document.getElementById('galleryDesc').innerText = eraData[galleryIdx].desc; currentLevel = galleryIdx + 1;
+        }
+
+        function startGame() {
+            if(audioCtx.state === 'suspended') audioCtx.resume(); playBGM();
+            document.getElementById('startScreen').style.display='none'; document.getElementById('uiLayer').style.display='block'; document.getElementById('legendBoard').style.display='block'; 
+            resetGame();
+        }
+
+        function triggerGameOver() {
+            gameState = 'gameover'; document.getElementById('mobileDpad').style.display = 'none'; 
+            document.getElementById('finalScore').innerText = '本次文化探索得分：' + score; 
+            finalRankName = calculateRank(score); document.getElementById('finalRankTitle').innerText = finalRankName;
+            saveScoreToLocal(score); document.getElementById('gameOverScreen').style.display='flex';
+        }
+
+        function resetGame() {
+            score = 0; lives = 3; currentLevel = 1;
+            document.getElementById('scoreBoard').innerText='SCORE: 0'; document.getElementById('eraBoard').innerText='远古泥胚'; document.getElementById('livesBoard').innerText='HP: ❤️❤️❤️'; document.getElementById('gameOverScreen').style.display='none';
+            activeItems.forEach(i => { scene.remove(i.mesh); scene.remove(i.ring); }); activeItems = [];
+            if(activePig) scene.remove(activePig);
+            if(pigModels[0]) { activePig=pigModels[0]; activePig.position.set(0,-2,0); activePig.rotation.set(0,0,0); activePig.scale.set(pigScales[0], pigScales[0], pigScales[0]); scene.add(activePig); }
+            gameState = 'playing';
+            if (window.innerWidth <= 768) { document.getElementById('mobileDpad').style.display = 'flex'; }
+        }
+
+        let keys = {}; window.addEventListener('keydown', e => keys[e.code]=true); window.addEventListener('keyup', e => keys[e.code]=false);
+
+        function bindDpad(btnId, keyName) {
+            const btn = document.getElementById(btnId);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); });
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); });
+            btn.addEventListener('mouseup', (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); });
+            btn.addEventListener('mouseleave', (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); });
+        }
+        bindDpad('btnUp', 'ArrowUp'); bindDpad('btnDown', 'ArrowDown'); bindDpad('btnLeft', 'ArrowLeft'); bindDpad('btnRight', 'ArrowRight');
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(gameState==='gallery') controls.update();
+
+            for(let i=explosionParticles.length-1; i>=0; i--) {
+                explosionParticles[i].position.add(explosionParticles[i].velocity); explosionParticles[i].life -= 0.02; explosionParticles[i].material.opacity = explosionParticles[i].life;
+                if(explosionParticles[i].life <= 0) { scene.remove(explosionParticles[i]); explosionParticles.splice(i,1); }
+            }
+            for(let i=auraParticles.length-1; i>=0; i--) {
+                auraParticles[i].position.add(auraParticles[i].velocity); auraParticles[i].life -= 0.015; auraParticles[i].material.opacity = auraParticles[i].life;
+                if(auraParticles[i].life <= 0) { scene.remove(auraParticles[i]); auraParticles.splice(i,1); }
+            }
+
+            if((gameState === 'playing' || gameState === 'gallery') && activePig) {
+                pigLight.position.copy(activePig.position).add(new THREE.Vector3(0, 3, 2));
+                if (Math.random() < 0.15) { 
+                    let px = activePig.position.x + (Math.random() - 0.5) * 2; let py = activePig.position.y + Math.random() * 1.5; let pz = activePig.position.z + (Math.random() - 0.5) * 2;
+                    let pColor, pSpeed, emit = false;
+                    if (currentLevel === 1) { pColor = 0x8B4513; pSpeed = 0.01; emit = Math.random() < 0.2; } else if (currentLevel === 2) { pColor = 0xffffff; pSpeed = 0.02; emit = Math.random() < 0.3; } else if (currentLevel === 3) { pColor = 0xFFD700; pSpeed = 0.04; emit = Math.random() < 0.5; } else if (currentLevel === 4) { pColor = 0x00E5FF; pSpeed = 0.08; emit = true; } 
+                    if (emit) { let size = (currentLevel === 4) ? 0.08 : 0.05; let p = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.8 })); p.position.set(px, py, pz); p.velocity = new THREE.Vector3(0, pSpeed, 0); p.life = 1.0; scene.add(p); auraParticles.push(p); }
+                }
+            }
+
+            if(gameState === 'playing' && activePig) {
+                let currentSpawnChance = 0.008 + (currentLevel * 0.004); let currentMaxItems = 1 + currentLevel; let currentBaseSpeed = 0.03 + (currentLevel * 0.005); 
+                if (Math.random() < currentSpawnChance && activeItems.length < currentMaxItems) { spawnItem(currentBaseSpeed); }
+                activeItems.forEach(it => { it.mesh.rotation.y += 0.02; it.mesh.rotation.x += 0.01; });
+                
+                if((keys['ArrowLeft'] || keys['KeyA']) && activePig.position.x > -6) activePig.position.x -= 0.15; 
+                if((keys['ArrowRight']|| keys['KeyD']) && activePig.position.x < 6) activePig.position.x += 0.15; 
+                if((keys['ArrowUp']   || keys['KeyW']) && activePig.position.z > -5) activePig.position.z -= 0.15; 
+                if((keys['ArrowDown'] || keys['KeyS']) && activePig.position.z < 5) activePig.position.z += 0.15;
+
+                for(let i=activeItems.length-1; i>=0; i--) {
+                    let it = activeItems[i]; it.mesh.position.y -= it.speed; it.ring.position.x = it.mesh.position.x; it.ring.position.z = it.mesh.position.z;
+                    let dX = Math.abs(activePig.position.x - it.mesh.position.x); let dY = Math.abs(activePig.position.y - it.mesh.position.y); let dZ = Math.abs(activePig.position.z - it.mesh.position.z);
+                    if (dX < 1.8 && dY < 2.0 && dZ < 1.8) {
+                        playSound(it.type); createExplosion(it.mesh.position.x, it.mesh.position.y, it.mesh.position.z, it.color);
+                        if(it.type==='bomb') { lives--; } else { score += (it.type==='gold'?3:1); if(it.type==='heart' && lives < 5) lives++; }
+                        document.getElementById('scoreBoard').innerText='SCORE: '+score; let h=''; for(let k=0; k<lives; k++) h+='❤️'; document.getElementById('livesBoard').innerText='HP: '+h;
+                        scene.remove(it.mesh); scene.remove(it.ring); activeItems.splice(i,1);
+                        if(score>=10 && currentLevel===1) evolvePig(1, "数字金缮修复版"); if(score>=25 && currentLevel===2) evolvePig(2, "盛世重光华丽版"); if(score>=45 && currentLevel===3) evolvePig(3, "赛博纪元高科版");
+                        if(lives<=0) { triggerGameOver(); }
+                    } else if(it.mesh.position.y < -2.2) {
+                        if(it.type==='apple' || it.type==='gold') { lives--; let h=''; for(let k=0; k<lives; k++) h+='❤️'; document.getElementById('livesBoard').innerText='HP: '+h; }
+                        scene.remove(it.mesh); scene.remove(it.ring); activeItems.splice(i,1);
+                        if(lives<=0) { triggerGameOver(); }
+                    }
+                }
+            }
+            composer.render();
+        }
+        animate();
+    </script>
+</body>
+</html>
